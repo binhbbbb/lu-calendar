@@ -1,0 +1,502 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+
+<dom-module id="lu-calendar">
+    <template>
+        <style>
+            :host {
+                display: block;
+                font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+
+                --spacing-xs: 2px;
+                --spacing-s: 4px;
+                --spacing-m: 8px;
+                --spacing-l: 12px;
+
+                --accent-color: rgb(62, 136, 255);
+                --today-color: rgba(241, 90, 90, 1);
+                --light-text-color: rgba(0, 0, 0, 0.6);
+                --lighter-text-color: rgba(0, 0, 0, 0.4);
+                --lightest-text-color: rgba(0, 0, 0, 0.2);
+
+                --icon-size: 24px;
+
+                --base-font-size: 16px;
+                --color-dot-size: 6px;
+            }
+
+            .calendar-header {
+                display: flex;
+                font-size: calc(var(--base-font-size) * 1.3);
+                padding: var(--spacing-m) var(--spacing-m) calc(var(--spacing-m) * 2);
+                align-items: center;
+            }
+            .calendar-header iron-icon {
+                margin:var(--spacing-s);
+                --iron-icon-height: var(--icon-size);
+                --iron-icon-width: var(--icon-size);
+                color: var(--lighter-text-color);
+                user-select: none;
+                cursor: pointer;
+            }
+            .calendar-header iron-icon:first-child {
+                margin-right: var(--spacing-m);
+            }
+            .calendar-header iron-icon:last-child {
+                margin-left: var(--spacing-m);
+            }
+            .calendar-header-year-month-wrapper {
+                display: flex;
+                flex-basis: 160px;
+            }
+            .calendar-header .calendar-month-name {
+                color: var(--accent-color);
+            }
+            .calendar-header .calendar-year {
+                font-weight: 300;
+                margin-right: var(--spacing-m);
+            }
+
+            .calendar-day-names {
+                display: flex;
+                color: var(--lighter-text-color);
+                text-transform: uppercase;
+                margin-left: calc(18px + calc(2 * var(--spacing-m)));
+            }
+            .calendar-content.size-l .calendar-day-names, .calendar-content.size-m .calendar-day-names,
+            .calendar-content.size-l .calendar-week, .calendar-content.size-l .calendar-week {
+                padding-left: var(--spacing-m);
+            }
+            .calendar-content.size-s .calendar-day-names, .calendar-content.size-s .calendar-week {
+                padding-left: 0 0 var(--spacing-s);
+            }
+            .calendar-content.size-xs .calendar-day-names, .calendar-content.size-xs .calendar-week {
+                padding-left: 0 0 var(--spacing-s);
+            }
+            .calendar-content.size-xs .calendar-day-names {
+                margin-left: calc(15px + var(--spacing-xs));
+            }
+
+            .calendar-day-name, .calendar-day-name-short {
+                width: calc(100% / 7);
+            }
+            .calendar-day-name {
+                padding-left: var(--spacing-m);
+            }
+            .calendar-day-name-short {
+                padding-left: var(--spacing-s);
+            }
+            .calendar-day-name.size-s, .calendar-day-name.size-xs {
+                display: none;
+            }
+            .calendar-day-name-short.size-m, .calendar-day-name-short.size-l {
+                display: none;
+            }
+
+            .calendar-week {
+                display: flex;
+            }
+
+            .calendar-week-number {
+                width: 18px;
+                padding-top: var(--spacing-m);
+                color: var(--lighter-text-color);
+                border-right: 1px solid var(--lightest-text-color);
+                padding-right: var(--spacing-m);
+                margin-right: var(--spacing-m);
+                text-align: right;
+            }
+            .calendar-week.size-xs .calendar-week-number {
+                width: 15px;
+                font-size: calc(var(--base-font-size) * 0.8);
+                padding-top: var(--spacing-s);
+                padding-right: var(--spacing-xs);
+                margin-right: 0;
+            }
+
+            .calendar-week-day {
+                width: calc(100% / 7);
+                padding-bottom: 12%;
+                position: relative;
+                box-sizing: border-box;
+            }
+            .calendar-week-day.other-month {
+                opacity: 0.3;
+            }
+            .calendar-date-content {
+                box-sizing: border-box;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                font-size: calc(var(--base-font-size) * 1.1);
+                padding: var(--spacing-s) var(--spacing-m) 0 var(--spacing-m);
+                font-weight: 300;
+            }
+            /* Responsive rules for dates */
+            .calendar-content.size-l .calendar-date-content {
+                font-size: calc(var(--base-font-size) * 1.5);
+            }
+            .calendar-content.size-m .calendar-date-content {
+                font-size: calc(var(--base-font-size) * 1.3);
+            }
+            .calendar-content.size-xs .calendar-date-content {
+                font-size: calc(var(--base-font-size) * 0.95);
+                padding: var(--spacing-xs) var(--spacing-s) 0 var(--spacing-s);
+            }
+
+            .calendar-date {
+                line-height: 110%;
+                display: inline-block;
+                padding: 0 3px;
+                border-bottom: 2px solid rgba(0, 0, 0, 0);
+                margin-bottom: var(--spacing-xs);
+            }
+
+            .calendar-week-day.today .calendar-date {
+                border-bottom-color: var(--today-color);
+                color: var(--today-color);
+                font-weight: normal;
+            }
+            .calendar-content.size-l .calendar-date, .calendar-content.size-m .calendar-date {
+                margin-bottom: var(--spacing-s);
+            }
+            .calendar-content.size-xs .calendar-date {
+                margin-bottom: 0;
+            }
+            .calendar-week-day.selected {
+                background-color: var(--accent-color);
+                color: white;
+            }
+            .calendar-date-events {
+                font-size: calc(var(--base-font-size) * 0.75);
+                overflow: hidden;
+            }
+            .calendar-event-color-dot {
+                flex: 0 0 var(--color-dot-size);
+                width: var(--color-dot-size);
+                height: var(--color-dot-size);
+                border-radius: 50%;
+                background-color: var(--accent-color);
+            }
+            .calendar-event-color-dot.meta {
+                margin: 2px 2px 0 0;
+            }
+            .calendar-event {
+                display: flex;
+                align-items: center;
+                font-weight: 400;
+            }
+            .calendar-event-time {
+                flex: 0 0 auto;
+                margin-left: var(--spacing-s);
+                color: var(--light-text-color);
+            }
+            .calendar-event-title {
+                overflow: hidden;
+                text-overflow: clip;
+                white-space: nowrap;
+                margin-left: var(--spacing-xs);
+            }
+            .calendar-event-meta {
+                color: var(--light-text-color);
+                display: flex;
+                align-items: center;
+                line-height: 0.9em;
+                margin-top: var(--spacing-xs);
+            }
+            .calendar-week-day.selected .calendar-event-meta, .calendar-week-day.selected .calendar-event-time {
+                color: rgba(255, 255, 255, 0.85);
+            }
+            .calendar-week-day.selected .calendar-event-color-dot {
+                background-color: rgba(255, 255, 255, 0.85) !important;
+            }
+        </style>
+
+        <div class$="calendar-header [[_sizeClass]]">
+            <iron-icon icon="arrow-back" on-click="_navigateToPreviousMonth"></iron-icon>
+            <div class="calendar-header-year-month-wrapper">
+                <div class="calendar-year">[[year]]</div>
+                <div class="calendar-month-name">[[_currentMonthName]]</div>
+            </div>
+            <iron-icon icon="arrow-forward" on-click="_navigateToNextMonth"></iron-icon>
+        </div>
+        <div class$="calendar-content [[_sizeClass]]">
+            <div class="calendar-day-names">
+                <template is="dom-repeat" items="[[_mergeAndReorderNames(dayNames, dayNamesShort)]]" as="day">
+                    <div class$="calendar-day-name [[_sizeClass]]">[[day.long]]</div>
+                    <div class$="calendar-day-name-short [[_sizeClass]]">[[day.short]]</div>
+                </template>
+            </div>
+            <template is="dom-repeat" items="[[_currentCalendarWeeks]]" as="week">
+                <div class$="calendar-week [[_sizeClass]]">
+                    <div class="calendar-week-number">[[week.number]]</div>
+                    <template is="dom-repeat" items="[[week.days]]" as="date">
+                        <div class$="calendar-week-day [[_getDateClass(date, _selectedDate)]]" on-click="_onDateClicked">
+                            <div class="calendar-date-content">
+                                <div class="calendar-date">[[date.date]]</div>
+                                <div class="calendar-date-events">
+                                    <template is="dom-repeat" items="[[_getEvents(date, _sizeClass)]]" as="event">
+                                        <div class="calendar-event">
+                                            <!-- Normal events -->
+                                            <template is="dom-if" if="[[!event.meta]]">
+                                                <div class="calendar-event-color-dot" style$="background-color: [[event.color]]"></div>
+                                                <template is="dom-if" if="[[event.time]]">
+                                                    <div class="calendar-event-time">[[event.time]]:</div>
+                                                </template>
+                                                <div class="calendar-event-title">[[event.title]]</div>
+                                            </template>
+                                            <!-- Meta about the events in general, e.g. number of events not visible -->
+                                            <template is="dom-if" if="[[event.meta]]">
+                                                <div class="calendar-event-meta">
+                                                    <template is="dom-repeat" items="[[event.colors]]" as="color">
+                                                        <div class="calendar-event-color-dot meta" style$="background-color: [[color.color]]"></div>
+                                                    </template>
+                                                    <div class="calendar-event-meta-text">[[event.text]]</div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+        <div class="calendar-footer">
+
+        </div>
+    </template>
+
+    <script>
+        /**
+         * `lu-calendar`
+         * A simple responsive calendar for viewing one month at a time
+         *
+         * @customElement
+         * @polymer
+         * @demo demo/index.html
+         */
+        class LuCalendar extends Polymer.Element {
+            static get is() {
+                return 'lu-calendar';
+            }
+
+            static get properties() {
+                return {
+                    month: Number,
+                    year: Number,
+                    monthNames: {
+                        type: Array,
+                        value: () => 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_')
+                    },
+                    monthNamesShort: {
+                        type: Array,
+                        value: () => 'Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec'.split('_')
+                    },
+                    dayNames: {
+                        type: Array,
+                        value: () => 'Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday'.split('_')
+                    },
+                    dayNamesShort: {
+                        type: Array,
+                        value: () => 'Sun_Mon_Tue_Wed_Thu_Fri_Sat'.split('_')
+                    },
+                    firstDayOfWeek: {
+                        type: Number,
+                        // Monday
+                        value: 1
+                    },
+                    // The calendar events
+                    // Format: [<year>][<month>][<date>]{title: <title>, time: <time-string>, color: <css color>}
+                    // E.g: {2018: {7: {24: [{title: "Some title", time: "17:00", color: "red"}]}}}
+                    events: {
+                        type: Object,
+                        value: () => {}
+                    },
+                    // An array containing the days that will be looped over in the template to create the calendar
+                    // Format: <week>: [{year: <year>, month: <month>, date: <date>}, ...]
+                    _currentCalendarWeeks: {
+                        type: Object,
+                        value: () => {}
+                    },
+                    _currentMonthName: {
+                        type: String,
+                        computed: "_computeMonthName(month)"
+                    },
+                    // Current time
+                    _yearNow: Number,
+                    _monthNow: Number,
+                    _dateNow: Number,
+                    // The HTML element for the selected date
+                    _selectedDate: Object,
+                    // A class representing the size of this calendar
+                    _sizeClass: String,
+                };
+            }
+
+            ready() {
+                super.ready();
+                let date = new Date();
+                this.year = this._yearNow = date.getFullYear();
+                this.month = this._monthNow = date.getMonth();
+                this._dateNow = date.getDate();
+                this._monthYearChanged();
+
+                window.addEventListener('resize', () => this._setSizeClass());
+                this._setSizeClass();
+            }
+
+            _monthYearChanged() {
+                if (this.year == null || this.month == null) {
+                    return;
+                }
+
+                let date = new Date(this.year, this.month, 1), days;
+
+                this._setToFirstDayOfCalendarMonth(date);
+
+                this._currentCalendarWeeks = [];
+
+                // Create days for the end of the previous month, this month, and the rest of the last week in this month
+                while(date.getFullYear() < this.year || (date.getMonth() <= this.month && date.getFullYear() === this.year) || date.getDay() !== this.firstDayOfWeek) {
+                    if (date.getDay() === this.firstDayOfWeek) {
+                        days = [];
+                        this._currentCalendarWeeks.push({ number: this._getWeekNumber(date), days: days })
+                    }
+
+                    days.push({
+                        year: date.getFullYear(), month: date.getMonth(), date: date.getDate()
+                    });
+                    date.setDate(date.getDate() + 1);
+                }
+
+                this.notifyPath("_currentCalendarWeeks");
+            }
+
+            _getWeekNumber(fromDate) {
+                let date = new Date(fromDate.getTime());
+                // Week numbers are defined by when the Thursday of the week occurs, so set the weekday to Thursday
+                date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+                // January 4 is always in week 1.
+                let week1 = new Date(date.getFullYear(), 0, 4);
+                // Count number of weeks between dates (Math.round to account for floating point errors)
+                return 1 + Math.round((date.getTime() - week1.getTime()) / 86400000 / 7);
+            }
+
+            _setToFirstDayOfCalendarMonth(date) {
+                let daysBack = date.getDay() - this.firstDayOfWeek;
+                daysBack = daysBack >= 0 ? daysBack : 7 + daysBack;
+                date.setDate(date.getDate() - daysBack);
+            }
+
+            _getDateClass(date) {
+                let monthClass = date.month === this.month ? "current-month" : "other-month";
+                let todayClass = date.month === this._monthNow && date.date === this._dateNow && this.year === this._yearNow ?
+                    "today" : "";
+                let selectedClass = LuCalendar._datesEqual(date, this._selectedDate) ? "selected" : "";
+                return `${monthClass} ${todayClass} ${selectedClass}`;
+            }
+
+            _computeMonthName(month) {
+                return this.monthNames[this.month];
+            }
+
+            _navigateToPreviousMonth() {
+                this.year = this.month > 0 ? this.year : this.year - 1;
+                this.month = this.month === 0 ? 11 : this.month - 1;
+                this._monthYearChanged();
+            }
+
+            _navigateToNextMonth() {
+                this.year = this.month < 11 ? this.year : this.year + 1;
+                this.month = this.month === 11 ? 0 : this.month + 1;
+                this._monthYearChanged();
+            }
+
+            _onDateClicked(event) {
+                this._selectedDate = this._selectedDate !== event.model.date ? event.model.date : null;
+                this.dispatchEvent(new CustomEvent("selected", { detail: { date: this._selectedDate }}));
+            }
+
+            _mergeAndReorderNames(a1, a2) {
+                let output = [];
+                for(let i = 0; i < a1.length; i++) {
+                    output.push({
+                        long: a1[i], short: a2[i]
+                    });
+                }
+                return this._reorderWeekDays(output);
+            }
+
+            _setSizeClass() {
+                let width = this.offsetWidth;
+                if (width >= 1000) {
+                    this._sizeClass =  "size-l";
+                } else if (width >= 700) {
+                    this._sizeClass =   "size-m";
+                } else if (width >= 500) {
+                    this._sizeClass =   "size-s";
+                } else {
+                    this._sizeClass =   "size-xs";
+                }
+            }
+
+            /**
+             * Returns a list of events for the given date formatted to fit the size class
+             * @private
+             */
+            _getEvents(date, sizeClass) {
+                let value = Polymer.Path.get(this.events, `${date.year}.${date.month}.${date.date}`);
+                if (value == null) {
+                    return [];
+                }
+                let more;
+                switch(sizeClass) {
+                    case "size-l":
+                        // Return 5 events, or 4 + number of events left
+                        return this._formatEventArray(value, 5);
+                    case "size-m":
+                        // Return 3 events, or 2 + number of events left
+                        return this._formatEventArray(value, 3);
+                    case "size-s":
+                        // Return 2 events, or 1 + number of events left
+                        return this._formatEventArray(value, 2);
+                    case "size-xs":
+                        // Return colored dots only
+                        let limit = value.length > 3 ? 3 : value.length;
+                        let newArray = [];
+                        for (let i = 0; i < limit; i++) {
+                            newArray.push({color: value[i].color != null ? value[i].color : ""});
+                        }
+                        return [{meta: true, colors: newArray, text: (value.length > 3) ? "+" : ""}];
+                }
+
+            }
+
+            /**
+             * Takes an array and reorders it so that the first element is the element with the index of this.firstDayOfWeek
+             * @private
+             */
+            _reorderWeekDays(days) {
+                return days.slice(this.firstDayOfWeek, days.length).concat(days.slice(0, this.firstDayOfWeek));
+            }
+
+            _formatEventArray(array, maxLength) {
+                if (array.length <= maxLength) {
+                    return array;
+                }
+                let more = array.length - (maxLength - 1);
+                let newArray = array.slice(0, (maxLength - 1));
+                newArray.push({meta: true, text: `+${more} more`});
+                return newArray;
+            }
+
+            static _datesEqual(d1, d2) {
+                return d1 != null && d2 != null && d1.year === d2.year && d1.month === d2.month && d1.date === d2.date;
+            }
+        }
+
+        window.customElements.define(LuCalendar.is, LuCalendar);
+    </script>
+</dom-module>
