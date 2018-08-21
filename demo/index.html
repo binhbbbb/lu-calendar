@@ -15,17 +15,44 @@
     <custom-style>
       <style is="custom-style" include="demo-pages-shared-styles">
         div.centered {
-          max-width: 1200px;
+          max-width: 600px;
         }
       </style>
     </custom-style>
+
+
+    <script>
+    function generateEvents() {
+        // Generate an event for dates 1-28 for the current month
+        let date = new Date(), events = { [date.getFullYear()]: { [date.getMonth()]: [] }};
+        for(let i = 1; i < 28; i++) {
+            events[date.getFullYear()][date.getMonth()][i] = [{ title: `Event ${i}`, time: `${i}:00`, color: 'green' }];
+        }
+        return events;
+    }
+    function addToTextarea(value) {
+        let textarea = document.getElementById('textarea');
+        textarea.value = `${textarea.value}${value}\n`;
+        textarea.scrollTop = textarea.scrollHeight;
+    }
+    </script>
   </head>
   <body>
     <div class="vertical-section-container centered">
       <h3>Basic lu-calendar demo</h3>
       <demo-snippet>
         <template>
-          <lu-calendar></lu-calendar>
+          <lu-calendar id="lu-calendar"></lu-calendar>
+          <textarea id="textarea" cols="40" rows="6"></textarea>
+          <script>
+              let calendar = document.getElementById('lu-calendar');
+              calendar.events = generateEvents();
+
+              calendar.addEventListener('selected', event => {
+                  let date = event.detail.date;
+                  addToTextarea(date != null ? `Selected year ${date.year} month ${date.month} date ${date.date}` : 'Deselected date');
+              });
+          </script>
         </template>
       </demo-snippet>
     </div>
